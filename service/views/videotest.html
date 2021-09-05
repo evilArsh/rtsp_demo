@@ -15,7 +15,9 @@
       id="video"
       autoplay
     ></video>
-    <div><button onclick="play">播放</button></div>
+    <div><button onclick="play()">播放</button></div>
+    <div><button onclick="playCamera()">开启摄像头</button></div>
+    <div><button onclick="stopCamera()">停止摄像头</button></div>
   </body>
   <script>
     const { createFFmpeg, fetchFile } = FFmpeg;
@@ -26,18 +28,18 @@
     });
     async function transcode(video, filePath) {
       await ffmpeg.load();
-      ffmpeg.FS("writeFile", "input.mp4", await fetchFile(filePath));
+      // ffmpeg.FS("writeFile", "input.mp4", await fetchFile(filePath));
       await ffmpeg.run(
         "-i",
-        "input.mp4",
+        "http://localhost:3000/videos/video.mp4",
         "-vcodec",
         "copy",
         "-an",
         "-f",
         "flv",
-        "test.flv"
+        "rtmp://localhost:8080/live/rtsp"
       );
-      const data = ffmpeg.FS("readFile", "test.flv");
+      const data = ffmpeg.FS("readFile", "http://localhost:8000/live/rtsp.flv");
       let blobUrl = URL.createObjectURL(
         new Blob([data.buffer], { type: "video/flv" })
       );
@@ -46,7 +48,7 @@
         URL.createObjectURL(new Blob([data.buffer], { type: "video/flv" }))
       );
     }
-    transcode(video, "videos/1.mp4");
+    // transcode(video, "videos/video.mp4");
   </script>
   <script>
     function play() {
@@ -56,8 +58,8 @@
       if (flvjs.isSupported()) {
         var videoElement = videoElement_;
         flvPlayer = flvjs.createPlayer({
-          type: "flv",
-          isLive: true,
+          type: "mp4",
+          // isLive: true,
           url: url,
         });
         flvPlayer.attachMediaElement(videoElement);
@@ -84,7 +86,7 @@
           console.log("%c[[scriptdata_arrived]]", "color: #43bb88", e);
         });
         flvPlayer.on("statistics_info", function (e) {
-          console.log("%c[[statistics_info]]", "color: #43bb88", e);
+          // console.log("%c[[statistics_info]]", "color: #43bb88", e);
         });
       }
     }
@@ -95,6 +97,38 @@
         flvPlayer.destroy();
         flvPlayer = null;
       }
+    }
+  </script>
+  <script>
+    let mediaStream = null;
+    async function getCamera() {
+      if (mediaStream) {
+        return;
+      }
+      // return URL.createObjectURL(new MediaSource());
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+        return mediaStream;
+      } catch (e) {
+        console.error("[摄像头打开失败]", e);
+      }
+    }
+    function stopCamera() {
+      if (!mediaStream) {
+        return;
+      }
+      mediaStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+      mediaStream = null;
+    }
+    function playCamera(){
+      getCamera().then(res=>{
+        video.srcObject=res;
+      })
     }
   </script>
 </html>
