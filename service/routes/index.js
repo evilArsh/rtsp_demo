@@ -6,6 +6,13 @@ router.get('/', async (ctx, next) => {
   await ctx.render('index')
 })
 
+router.get('/video', async (ctx, next) => {
+  ctx.set('Cross-Origin-Opener-Policy', 'same-origin')
+  ctx.set('Cross-Origin-Embedder-Policy', 'require-corp')
+  await ctx.render('videotest')
+})
+
+
 router.get('/string', async (ctx, next) => {
   ctx.body = 'koa2 string'
 })

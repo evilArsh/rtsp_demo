@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="ffmpeg/ffmpeg.min.js"></script>
+    <script src="flv/flv.min.js"></script>
+  </head>
+  <body>
+    <h1>VIDEO</h1>
+    <video
+      style="width: 500px; height: 500px; border: solid 1px red"
+      id="video"
+      autoplay
+    ></video>
+    <div><button onclick="play">播放</button></div>
+  </body>
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    let video = document.getElementById("video");
+    const ffmpeg = createFFmpeg({
+      log: true,
+      corePath: "ffmpeg/ffmpeg-core.js",
+    });
+    async function transcode(video, filePath) {
+      await ffmpeg.load();
+      ffmpeg.FS("writeFile", "input.mp4", await fetchFile(filePath));
+      await ffmpeg.run(
+        "-i",
+        "input.mp4",
+        "-vcodec",
+        "copy",
+        "-an",
+        "-f",
+        "flv",
+        "test.flv"
+      );
+      const data = ffmpeg.FS("readFile", "test.flv");
+      let blobUrl = URL.createObjectURL(
+        new Blob([data.buffer], { type: "video/flv" })
+      );
+      beginStream(
+        video,
+        URL.createObjectURL(new Blob([data.buffer], { type: "video/flv" }))
+      );
+    }
+    transcode(video, "videos/1.mp4");
+  </script>
+  <script>
+    function play() {
+      video.play();
+    }
+    function beginStream(videoElement_, url) {
+      if (flvjs.isSupported()) {
+        var videoElement = videoElement_;
+        flvPlayer = flvjs.createPlayer({
+          type: "flv",
+          isLive: true,
+          url: url,
+        });
+        flvPlayer.attachMediaElement(videoElement);
+        flvPlayer.load();
+        flvPlayer.on("error", function (e) {
+          console.log("[出错]", e);
+          end();
+        });
+        flvPlayer.on("recovered_early_eof", function (e) {
+          console.log("%c[[recovered_early_eof]]", "color: #43bb88", e);
+        });
+        flvPlayer.on("media_info", function (e) {
+          console.log("%c[[media_info]]", "color: #43bb88", e);
+        });
+        flvPlayer.on("loading_complete", function (e) {
+          console.log("%c[[loading_complete]]", "color: #43bb88", e);
+          // 判断当前流是否断开
+          // end();
+        });
+        flvPlayer.on("metadata_arrived", function (e) {
+          console.log("%c[[metadata_arrived]]", "color: #43bb88", e);
+        });
+        flvPlayer.on("scriptdata_arrived", function (e) {
+          console.log("%c[[scriptdata_arrived]]", "color: #43bb88", e);
+        });
+        flvPlayer.on("statistics_info", function (e) {
+          console.log("%c[[statistics_info]]", "color: #43bb88", e);
+        });
+      }
+    }
+    function end() {
+      if (flvPlayer != null) {
+        flvPlayer.unload();
+        flvPlayer.detachMediaElement();
+        flvPlayer.destroy();
+        flvPlayer = null;
+      }
+    }
+  </script>
+</html>
