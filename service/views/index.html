@@ -9,73 +9,58 @@
 
   <body>
     <h1>RTSP</h1>
-    <video style="width: 500px;height:500px; border:solid 1px red" id="video" autoplay muted></video>
+    <video
+      style="width: 500px; height: 500px; border: solid 1px red"
+      id="video"
+      muted
+    ></video>
+    <input type="text" placeholder="播放地址" id="val">
+    <button onclick="onPlay()">播放</button>
   </body>
   <script src="ffmpeg/ffmpeg.min.js"></script>
   <script src="flv/flv.min.js"></script>
+  <script src="js/player.js"></script>
   <script>
-    const { createFFmpeg } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
-    let outUrl = "http://10.10.6.109:9090/live/h264";
-    // ffmpeg.run('-i','rtsp://10.10.5.201:8557/h264','-vcodec','copy','-an','-f','flv','blob:http://localhost:9090/live/h264')
+    function onPlay(){
+      let value = document.getElementById("val")
+      const player = new Player("video", flvjs, false);
+      player.play(value.value)
+    }
+    // const { createFFmpeg } = FFmpeg;
+    // const ffmpeg = createFFmpeg({ log: true });
+    // let outUrl = "http://10.10.6.109:9090/live/h264";
+    // // ffmpeg.run('-i','rtsp://10.10.5.201:8557/h264','-vcodec','copy','-an','-f','flv','blob:http://localhost:9090/live/h264')
     // (async () => {
     //   await ffmpeg.load();
-    //   ffmpeg.FS("writeFile", "test.avi", await fetchFile("./test.avi"));
+    //   ffmpeg.FS("writeFile", "test.avi", await fetchFile("h264/1.ps"));
     //   await ffmpeg.run("-i", "test.avi", "test.mp4");
-    //   await fs.promises.writeFile(
-    //     "./test.mp4",
-    //     ffmpeg.FS("readFile", "test.mp4")
-    //   );
-    //   process.exit(0);
+    //   await fs.promises.writeFile("./test.mp4", ffmpeg.FS("readFile", "test.mp4"));
+    //   // process.exit(0);
     // })();
-    let video = document.getElementById("video");
-    let flvPlayer=null;
-    function beginStream() {
-      if (flvjs.isSupported()) {
-        var videoElement = video;
-        flvPlayer = flvjs.createPlayer({
-          type: "flv",
-          isLive: true,
-          url: 'http://10.10.6.109:8000/live/rtsp.flv',
-        });
-        flvPlayer.attachMediaElement(videoElement);
-        flvPlayer.load();
-        flvPlayer.play();
-        flvPlayer.on("error", function (e) {
-          console.log("[出错]", e);
-          // 删掉当前已经入栈vuex streamUri的元素
-          end();
-        });
-        flvPlayer.on("recovered_early_eof", function (e) {
-          console.log("recovered_early_eof", e);
-        });
-        flvPlayer.on("media_info", function (e) {
-          console.log("media_info", e);
-        });
-        flvPlayer.on("loading_complete", function (e) {
-          // 判断当前流是否断开
-          end();
-        });
-        flvPlayer.on("metadata_arrived", function (e) {
-          console.log("metadata_arrived", e);
-        });
-        flvPlayer.on("scriptdata_arrived", function (e) {
-          console.log("scriptdata_arrived", e);
-        });
-        flvPlayer.on("statistics_info", function (e) {
-          // console.log("object", e);
-        });
-      }
-    }
-    function end () {
-      if (flvPlayer != null) {
-        flvPlayer.unload();
-        flvPlayer.detachMediaElement();
-        flvPlayer.destroy();
-        flvPlayer = null;
-      }
-    }
-    beginStream();
-
+    // const { createFFmpeg, fetchFile } = FFmpeg;
+    // const ffmpeg = createFFmpeg({ log: true });
+    // const transcode = async (url, name) => {
+    //   await ffmpeg.load();
+    //   ffmpeg.FS("writeFile", name, await fetchFile(url));
+    //   // await ffmpeg.run("-i", name, "output.mp4");
+    //   ffmpeg.run(
+    //     "-i",
+    //     "rtsp://10.10.5.201:8557/h264",
+    //     "-vcodec",
+    //     "copy",
+    //     "-an",
+    //     "-f",
+    //     "flv",
+    //     "blob:http://localhost:9090/live/h264"
+    //   );
+    //   const data = ffmpeg.FS("readFile", "output.mp4");
+    //   const video = document.getElementById("video");
+    //   // video.src = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }));
+    //   // video.src = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }));
+    //   let url = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }));
+    //   player.play(url);
+    // };
+    // transcode("h264/1.ps", "1.ps");
+    // document.getElementById("uploader").addEventListener("change", transcode);
   </script>
 </html>
